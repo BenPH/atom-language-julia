@@ -588,6 +588,46 @@ describe "Julia grammar", ->
     expect(tokens[2]).toEqual value: 'a\t\sb', scopes: ["source.julia", "string.quoted.other.julia"]
     expect(tokens[3]).toEqual value: '"', scopes: ["source.julia", "string.quoted.other.julia", "punctuation.definition.string.end.julia"]
 
+  it "tokenizes Markdown multiline string macros", ->
+    tokens = grammar.tokenizeLines('''
+    md"""
+    # hello world
+    """
+    ''')
+    expect(tokens[0][0]).toEqual value: 'md', scopes: ["source.julia", "embed.markdown.julia", "support.function.macro.julia"]
+    expect(tokens[0][1]).toEqual value: '"""', scopes: ["source.julia", "embed.markdown.julia", "punctuation.definition.string.begin.julia"]
+    expect(tokens[1][0]).toEqual value: '#', scopes: ["source.julia", "embed.markdown.julia", "source.gfm"]
+    expect(tokens[1][1]).toEqual value: ' ', scopes: ["source.julia", "embed.markdown.julia", "source.gfm"]
+    expect(tokens[1][2]).toEqual value: 'hello', scopes: ["source.julia", "embed.markdown.julia", "source.gfm"]
+    expect(tokens[1][3]).toEqual value: ' ', scopes: ["source.julia", "embed.markdown.julia", "source.gfm"]
+    expect(tokens[1][4]).toEqual value: 'world', scopes: ["source.julia", "embed.markdown.julia", "source.gfm"]
+    expect(tokens[2][0]).toEqual value: '"""', scopes: ["source.julia", "embed.markdown.julia", "punctuation.definition.string.end.julia"]
+
+  it "tokenizes Markdown single line string macros", ->
+    tokens = grammar.tokenizeLines('''
+    md"hello *world*"
+    # A comment, not markdown
+    ''')
+    expect(tokens[0][0]).toEqual value: 'md', scopes: ["source.julia", "embed.markdown.julia", "support.function.macro.julia"]
+    expect(tokens[0][1]).toEqual value: '"', scopes: ["source.julia", "embed.markdown.julia", "punctuation.definition.string.begin.julia"]
+    expect(tokens[0][2]).toEqual value: 'hello *world*', scopes: ["source.julia", "embed.markdown.julia"]
+    expect(tokens[0][3]).toEqual value: '"', scopes: ["source.julia", "embed.markdown.julia", "punctuation.definition.string.end.julia"]
+    expect(tokens[1][0]).toEqual value: '#', scopes: ["source.julia", "comment.line.number-sign.julia", "punctuation.definition.comment.julia"]
+    expect(tokens[1][1]).toEqual value: ' A comment, not markdown', scopes: ["source.julia", "comment.line.number-sign.julia"]
+
+  it "tokenizes indented Markdown multiline string macros", ->
+    tokens = grammar.tokenizeLines('''
+        md"""
+        # hello world
+        """
+        # A comment, not markdown
+    ''')
+    expect(tokens[0][0]).toEqual value: 'md', scopes: ["source.julia", "embed.markdown.julia", "support.function.macro.julia"]
+    expect(tokens[0][1]).toEqual value: '"""', scopes: ["source.julia", "embed.markdown.julia", "punctuation.definition.string.begin.julia"]
+    expect(tokens[2][0]).toEqual value: '"""', scopes: ["source.julia", "embed.markdown.julia", "punctuation.definition.string.end.julia"]
+    expect(tokens[3][0]).toEqual value: '#', scopes: ["source.julia", "comment.line.number-sign.julia", "punctuation.definition.comment.julia"]
+    expect(tokens[3][1]).toEqual value: ' A comment, not markdown', scopes: ["source.julia", "comment.line.number-sign.julia"]
+
   it "tokenizes symbols of `keyword.other`s", ->
     {tokens} = grammar.tokenizeLine(':type')
     expect(tokens[0]).toEqual value: ':type', scopes: ["source.julia", "constant.other.symbol.julia"]
